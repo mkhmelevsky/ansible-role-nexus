@@ -1,2 +1,28 @@
 ---
 # tasks file for ansible-role-nexus
+
+- name: Include common variables
+  include_vars: '{{ platform_vars }}'
+  with_first_found:
+    - "vars-{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+    - "vars-{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml"
+  loop_control:
+    loop_var: platform_vars
+
+- name: Perform platform-specific installation tasks
+  include_tasks: "{{ platform }}"
+  with_first_found:
+    - "setup-{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+    - "setup-{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml"
+    - "not-supported.yml"
+  loop_control:
+    loop_var: platform
+  tags: [ install ]
+
+- name: Install Nexus
+  include_tasks: nexus-install.yml
+  tags: [ build ]
+
+- name: Configure Nexus
+  include_tasks: nexus-configure.yml
+  tags: [ configure ]

@@ -1,0 +1,54 @@
+---
+# file: tasks/setup-RedHat-7.yml
+
+- name: Platform-specific privileged tasks
+  become: yes
+  block:
+    - name: Install prerequisities packages
+      yum:
+        name: "{{ nexus_required_packages }}"
+      register: task_result
+      retries: 3
+      delay: 2
+      until: task_result is succeeded
+
+    - name: Check if the group for Nexus already exist
+      shell: "grep --silent {{ nexus_group }} /etc/group"
+      register: group_grep_result
+      ignore_errors: yes
+      failed_when: group_grep_result.rc > 1
+
+    - name: Create group for Nexus service
+      when: group_grep_result.rc == 1
+      group:
+        name: "{{ nexus_group }}"
+        state: present
+      register: task_result
+      retries: 3
+      delay: 2
+      until: task_result is succeeded
+
+    - name: Check if the user for Nexus already exist
+      shell: "grep --silent {{ nexus_user }} /etc/passwd"
+      register: user_grep_result
+      ignore_errors: yes
+      failed_when: user_grep_result.rc > 1
+
+    - name: Create user for Nexus service to run as
+      when: user_grep_result.rc == 1
+      user:
+        comment: "{{ nexus_user.comment | default(omit) }}"
+        createhome: yes
+        name: "{{ nexus_user }}"
+        group: "{{ nexus_group }}"
+        home: "{{ nexus_user_home_directory }}"
+        password: "!"
+        shell: "{{ nexus_user_shell }}"
+        state: present
+        update_password: "{{ nexus_user_update_password }}"
+      register: task_result
+      retries: 3
+      delay: 2
+      until: task_result is succeeded
+
+...

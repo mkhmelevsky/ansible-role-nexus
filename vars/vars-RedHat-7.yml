@@ -1,0 +1,6 @@
+---
+# file: vars/vars-RedHat-7.yml
+
+nexus_pam_system_auth_file: "/etc/pam.d/system-auth"
+
+...

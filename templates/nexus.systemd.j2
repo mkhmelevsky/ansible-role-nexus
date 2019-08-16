@@ -1,0 +1,18 @@
+#
+# {{ ansible_managed }}
+#
+
+[Unit]
+Description=nexus service
+After=network.target
+
+[Service]
+Type=forking
+LimitNOFILE={{ nexus_ulimit }}
+ExecStart={{ nexus_home_directory }}/bin/nexus start
+ExecStop={{ nexus_home_directory }}/bin/nexus stop
+User={{ nexus_user }}
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target

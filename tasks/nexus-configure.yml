@@ -1,0 +1,12 @@
+---
+# file: tasks/nexus-configure.yml
+
+- name: Perform configuration tasks
+  become: yes
+  become_user: {{ nexus_user }}
+  block:
+    - name: Render configiration from template
+      debug:
+        msg: "just stub"
+
+...
