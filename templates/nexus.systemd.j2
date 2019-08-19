@@ -9,8 +9,8 @@ After=network.target
 [Service]
 Type=forking
 LimitNOFILE={{ nexus_ulimit }}
-ExecStart={{ nexus_home_directory }}/bin/nexus start
-ExecStop={{ nexus_home_directory }}/bin/nexus stop
+ExecStart={{ nexus_directory_home }}/bin/nexus start
+ExecStop={{ nexus_directory_home }}/bin/nexus stop
 User={{ nexus_user }}
 Restart=on-abort
 

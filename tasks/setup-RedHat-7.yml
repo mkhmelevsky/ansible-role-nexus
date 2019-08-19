@@ -6,7 +6,7 @@
   block:
     - name: Install prerequisities packages
       yum:
-        name: "{{ nexus_required_packages }}"
+        name: "{{ nexus_prerequisities_packages }}"
       register: task_result
       retries: 3
       delay: 2
@@ -46,6 +46,23 @@
         shell: "{{ nexus_user_shell }}"
         state: present
         update_password: "{{ nexus_user_update_password }}"
+      register: task_result
+      retries: 3
+      delay: 2
+      until: task_result is succeeded
+
+    - name: Create Nexus directories
+      file:
+        group: "{{ nexus_group }}"
+        owner: "{{ nexus_user }}"
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - "{{ nexus_directory_log }}"
+        - "{{ nexus_directory_data }}"
+        - "{{ nexus_directory_data }}/etc"
+        - "{{ nexus_directory_package }}"
+        - "{{ nexus_directory_tmp }}"
       register: task_result
       retries: 3
       delay: 2

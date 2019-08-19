@@ -1,28 +1,11 @@
 ---
 # file: tasks/nexus-install.yml
 
-- name: Perform unprivileged installation tasks first
+- name: Tasks performed under nexus_user account
   become: yes
   become_user: "{{ nexus_user }}"
   block:
-  - name: Create Nexus directories
-    file:
-      group: "{{ nexus_group }}"
-      owner: "{{ nexus_user }}"
-      path: "{{ item }}"
-      state: directory
-    with_items:
-      - "{{ nexus_directory_log }}"
-      - "{{ nexus_directory_data }}"
-      - "{{ nexus_directory_data }}/etc"
-      - "{{ nexus_directory_package }}"
-      - "{{ nexus_directory_tmp }}"
-    register: task_result
-    retries: 3
-    delay: 2
-    until: task_result is succeeded
-
-  - name: Download Nexus SHA1 sum
+  - name: Get Nexus SHA1 cheksum file
     get_url:
       dest: "{{ nexus_directory_package }}/latest-unix.tar.gz.sha1"
       url: "{{ nexus_download_url }}/latest-unix.tar.gz.sha1"
@@ -31,30 +14,37 @@
     delay: 2
     until: task_result is succeeded
 
-  - name: Download Nexus
+  - name: Determine if Nexus archive is already here
+    stat:
+      path: "{{ nexus_directory_package }}/latest-unix.tar.gz"
+    register: nexus_tar_file
+
+  - name: Download Nexus archive if absent
     get_url:
       dest: "{{ nexus_directory_package }}/latest-unix.tar.gz"
       url: "{{ nexus_download_url }}/latest-unix.tar.gz"
+    when:
+      - nexus_tar_file.stat.isreg is defined
+      - not nexus_tar_file.stat.isreg
     register: task_result
     retries: 3
     delay: 2
     until: task_result is succeeded
 
-  - name: Verify Nexus signature
+  - name: Verify Nexus SHA1 checksum
     shell: "[[ \"$(cat {{ nexus_directory_package }}/latest-unix.tar.gz.sha1)\" == \"$(sha1sum {{ nexus_directory_package }}/latest-unix.tar.gz | awk '{print $1}')\" ]]"
 
   - name: Determine Nexus version
     shell: 'tar --list -f {{ nexus_directory_package }}/latest-unix.tar.gz | grep -m 1 nexus | sed "s/^nexus-\([0-9\.-]*\).*/\1/"'
+    args:
+      warn: False
     register: command_result
 
   - name: Set nexus_version variable
     set_fact:
       nexus_version: "{{ command_result.stdout }}"
 
-  - debug:
-      msg: "Determined Nexus version: {{ nexus_version }}"
-
-  - name: Unpack Nexus
+  - name: Unpack Nexus archive
     unarchive:
       copy: no
       creates: "{{ nexus_directory_package }}/nexus-{{ nexus_version }}"
@@ -65,7 +55,17 @@
     delay: 2
     until: task_result is succeeded
 
-  - name: Make symbolic link to Nexus Directory
+  - name: Delete tar file
+    when: nexus_delete_downloaded_tar is defined and nexus_delete_downloaded_tar
+    file:
+      path: "{{ nexus_directory_package }}/latest-unix.tar.gz"
+      state: absent
+    register: task_result
+    retries: 3
+    delay: 2
+    until: task_result is succeeded
+
+  - name: Make symbolic link to Nexus directory
     file:
       dest: "{{ nexus_directory_home }}"
       src: "{{ nexus_directory_package }}/nexus-{{ nexus_version }}"
@@ -98,7 +98,8 @@
     delay: 2
     until: task_result is succeeded
 
-- name: Perform privileged tasks
+
+- name: Perform privileged installation tasks
   become: True
   block:
   - name: Raise nofile limit for Nexus user

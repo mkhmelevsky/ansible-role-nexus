@@ -17,12 +17,18 @@
     - "not-supported.yml"
   loop_control:
     loop_var: platform
-  tags: [ install ]
+  tags: [ nexus-common-setup ]
 
 - name: Install Nexus
   include_tasks: nexus-install.yml
-  tags: [ build ]
+  tags: [ nexus-install ]
 
 - name: Configure Nexus
   include_tasks: nexus-configure.yml
-  tags: [ configure ]
+  tags: [ nexus-configure ]
+
+- name: "Congratulations! You can now log in to your new shiny Nexus with: admin / {{ nexus_admin_password.stdout }}"
+  command: "date"
+  when:
+    - nexus_show_admin_password
+    - nexus_admin_password is defined

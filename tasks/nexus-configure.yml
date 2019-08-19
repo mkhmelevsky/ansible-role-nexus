@@ -3,10 +3,108 @@
 
 - name: Perform configuration tasks
   become: yes
-  become_user: {{ nexus_user }}
+  become_user: "{{ nexus_user }}"
   block:
-    - name: Render configiration from template
-      debug:
-        msg: "just stub"
+    - name: Render configiration file from template
+      template:
+        dest: "{{ nexus_directory_data }}/etc/nexus.properties"
+        src: nexus.properties.j2
+      register: nexus_config_changed
+
+    - name: Create Nexus vmoptions
+      template:
+        dest: "{{ nexus_directory_home }}/bin/nexus.vmoptions"
+        src: nexus.vmoptions.j2
+      register: nexus_config_changed
+
+    - name: Lower Nexus disk space threshold
+      lineinfile:
+        backrefs: yes
+        dest: "{{ nexus_directory_home }}/etc/karaf/system.properties"
+        insertafter: EOF
+        line: "storage.diskCache.diskFreeSpaceLimit={{ nexus_configuration_disk_free_space_limit }}"
+        regexp: ^storage\.diskCache\.diskFreeSpaceLimit
+      when: nexus_configuration_disk_free_space_limit is not none
+      register: nexus_config_changed
+
+# Priviliged tasks
+- name: Perform privileged configuration tasks
+  become: yes
+  block:
+  - name: Start Nexus service if enabled
+    service:
+      enabled: yes
+      name: nexus
+      state: started
+    when:
+      - nexus_service_start_on_boot
+      - not nexus_config_changed.changed
+    register: task_result
+    retries: 3
+    delay: 2
+    until: task_result is succeeded
+
+  - name: Ensure Nexus service is restarted
+    service:
+      name: nexus
+      state: restarted
+    when:
+      - nexus_service_start_on_boot
+      - nexus_config_changed.changed
+    register: task_result
+    retries: 3
+    delay: 2
+    until: task_result is succeeded
+
+  - name: Wait for Nexus port if started
+    wait_for:
+      port: "{{ nexus_port }}"
+      state: started
+      timeout: "{{ nexus_port_check_timeout }}"
+    register: task_result
+    retries: 3
+    delay: 2
+    until: task_result is succeeded
+
+  - name: Get generated admin password
+    command: "cat {{ nexus_directory_data }}/admin.password"
+    register: nexus_admin_password
+
+  - name: Add FirewallD service
+    template:
+      dest: "/usr/lib/firewalld/services/nexus.xml"
+      src: nexus-firewalld.xml.j2
+    when:
+      - nexus_service_add_firewalld
+    register: firewalld_service_config
+    retries: 3
+    delay: 2
+    until: firewalld_service_config is succeeded
+
+  - name: Reload FirewallD
+    service:
+      name: firewalld
+      state: reloaded
+    when:
+      - firewalld_service_config.changed
+    register: task_result
+    retries: 3
+    delay: 2
+    until: task_result is succeeded
+
+  - name: Add Nexus service to FirewallD zone "{{ nexus_service_firewalld_zone }}"
+    firewalld:
+      service: "{{ nexus_service_firewalld_service_name }}"
+      zone: "{{ nexus_service_firewalld_zone }}"
+      state: enabled
+      permanent: yes
+      offline: yes
+    when:
+      - nexus_service_add_firewalld
+      - nexus_service_firewalld_enabled
+    register: task_result
+    retries: 3
+    delay: 2
+    until: task_result is succeeded
 
 ...

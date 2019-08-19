@@ -1,13 +1,15 @@
 ---
 # defaults file for ansible-role-nexus
 
-nexus_required_packages:
-  - java-1.8.0-openjdk
+nexus_prerequisities_packages:
+  # - java-1.8.0-openjdk
+  - java-latest-openjdk
 
 nexus_download_url: 'https://download.sonatype.com/nexus/3'
-#nexus_edition: nexus-oss-edition
-#nexus_features: nexus-oss-feature
-#nexus_version: 3.18.1-01
+nexus_delete_downloaded_tar: no
+nexus_edition: nexus-oss-edition
+nexus_features: nexus-oss-feature
+nexus_context_path: /
 nexus_host: 0.0.0.0
 nexus_java_heap_size: 1200M
 nexus_java_max_direct_memory: 2G
@@ -15,18 +17,26 @@ nexus_port: 8081
 nexus_port_check_timeout: 600
 nexus_ulimit: '65536'
 
+nexus_show_admin_password: True
 nexus_user: nexus
 nexus_group: nexus
 nexus_user_shell: /bin/bash
 nexus_user_update_password: always
-nexus_user_comment: 'Nexus service'
+nexus_user_comment: Nexus service account
 nexus_user_home_directory: /home/{{ nexus_user }}
 
-nexus_directory_home: "{{ nexus_user_home_directory }}/nexus"
-nexus_directory_log: "{{ nexus_user_home_directory }}/log"
-nexus_directory_data: "{{ nexus_user_home_directory }}/sonatype-work/nexus3"
-nexus_directory_package: "{{ nexus_user_home_directory }}/pkg"
-nexus_directory_tmp: "{{ nexus_user_home_directory }}/tmp"
+nexus_directory_prefix: "/opt/{{ nexus_user }}"
+nexus_directory_home: "{{ nexus_directory_prefix }}/nexus"
+nexus_directory_log: "{{ nexus_directory_prefix }}/log"
+nexus_directory_data: "{{ nexus_directory_prefix }}/sonatype-work/nexus3"
+nexus_directory_package: "{{ nexus_directory_prefix }}/pkg"
+nexus_directory_tmp: "{{ nexus_directory_prefix }}/tmp"
 
 nexus_service_enabled: yes
-#nexus_service_start_on_boot: yes
+nexus_service_start_on_boot: yes
+nexus_service_add_firewalld: yes
+nexus_service_firewalld_enabled: yes
+nexus_service_firewalld_service_name: nexus
+nexus_service_firewalld_zone: public
+
+nexus_configuration_disk_free_space_limit: ~
