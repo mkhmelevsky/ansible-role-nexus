@@ -1,13 +1,13 @@
 ---
 # handlers file for ansible-role-nexus
 
-- name: Start nexus service
+- name: start nexus service
   become: yes
   service:
     name: nexus
     state: started
 
-- name: Stop nexus service
+- name: stop nexus service
   become: yes
   service:
     name: nexus
@@ -19,8 +19,14 @@
     name: nexus
     state: restarted
 
-- name: Reload nexus service
+- name: reload nexus service
   become: yes
   service:
     name: nexus
+    state: reloaded
+
+- name: reload firewalld
+  become: yes
+  service:
+    name: firewalld
     state: reloaded

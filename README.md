@@ -1,38 +1,47 @@
-Role Name
-=========
+# Ansible Role: Nexus
 
-A brief description of the role goes here.
+## Summary
 
-Requirements
-------------
+  This role installs Nexus Repository Manager and required packages.
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+## Role tasks
 
-Role Variables
---------------
+  - Create user/group for Nexus service to run as
+  - Create directories for Nexus
+  - Download and verify tar file
+  - Render config files from templates
+  - Create Nexus SystemD service
+  - Add FirewallD service for Nexus
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+## Requirements
 
-Dependencies
-------------
+  Host should be previously bootstrapped preferable with ansible-role-bootstrap
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+## Role Variables
 
-Example Playbook
-----------------
+  All variables are listed in defaults/main.yml along with their default values
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+## Dependencies
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+  None.
 
-License
--------
+## Example Playbook
 
-BSD
+```yaml
+  ---
 
-Author Information
-------------------
+  - name: Apply role ansible-role-nexus to every host in group 'all'
+    hosts: all
+    roles:
+      - role: ansible-role-nexus
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+```
+
+## License
+
+MIT
+
+## Author Information
+
+Author:
+  - Max Khmelevsky <max.khmelevsky@yandex.ru>

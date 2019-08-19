@@ -27,7 +27,7 @@
   include_tasks: nexus-configure.yml
   tags: [ nexus-configure ]
 
-- name: "Congratulations! You can now log in to your new shiny Nexus with: admin / {{ nexus_admin_password.stdout }}"
+- name: "Congratulations! You can now log into your new shiny Nexus http://{{ ansible_default_ipv4.address }}:{{ nexus_port }}/ with: admin / {{ nexus_admin_password.stdout }}"
   command: "date"
   when:
     - nexus_show_admin_password

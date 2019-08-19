@@ -24,8 +24,8 @@
       dest: "{{ nexus_directory_package }}/latest-unix.tar.gz"
       url: "{{ nexus_download_url }}/latest-unix.tar.gz"
     when:
-      - nexus_tar_file.stat.isreg is defined
-      - not nexus_tar_file.stat.isreg
+      - nexus_tar_file.stat.exists is defined
+      - not nexus_tar_file.stat.exists
     register: task_result
     retries: 3
     delay: 2

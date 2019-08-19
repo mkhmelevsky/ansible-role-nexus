@@ -2,8 +2,7 @@
 # defaults file for ansible-role-nexus
 
 nexus_prerequisities_packages:
-  # - java-1.8.0-openjdk
-  - java-latest-openjdk
+  - java-1.8.0-openjdk
 
 nexus_download_url: 'https://download.sonatype.com/nexus/3'
 nexus_delete_downloaded_tar: no
